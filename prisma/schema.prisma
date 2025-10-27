@@ -140,7 +140,7 @@ model Education {
   fieldOfStudy       String?   @map("field_of_study")
   startDate          DateTime? @map("start_date")
   endDate            DateTime? @map("end_date")
-  gpa                Decimal?  @db.Decimal(3, 2)
+  gpa                Float?
   achievements       String?
   institutionLogoUrl String?   @map("institution_logo_url")
   displayOrder       Int       @default(0) @map("display_order")
