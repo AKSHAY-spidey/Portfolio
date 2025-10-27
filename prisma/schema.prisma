@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User authentication table (single admin user)
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// Personal profile information
+model Profile {
+  id              String    @id @default(uuid())
+  fullName        String    @map("full_name")
+  title           String
+  bio             String
+  profilePhotoUrl String?   @map("profile_photo_url")
+  email           String?
+  phone           String?
+  location        String?
+  resumeUrl       String?   @map("resume_url")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("profile")
+}
+
+// Skill categories for organization
+model SkillCategory {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  skills Skill[]
+
+  @@index([displayOrder])
+  @@map("skill_categories")
+}
+
+// Individual skills with proficiency levels
+model Skill {
+  id              String        @id @default(uuid())
+  categoryId      String        @map("category_id")
+  name            String
+  proficiency     String // beginner, intermediate, advanced, expert
+  yearsExperience Int?          @map("years_experience")
+  iconUrl         String?       @map("icon_url")
+  displayOrder    Int           @default(0) @map("display_order")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  category SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([displayOrder])
+  @@map("skills")
+}
+
+// Projects/Portfolio items with visibility controls
+model Project {
+  id             String    @id @default(uuid())
+  title          String
+  slug           String    @unique
+  description    String
+  technologies   String    @default("[]") // JSON array of technology strings
+  projectDate    DateTime? @map("project_date")
+  visibility     String // public, private, unlisted, password
+  uniqueLinkId   String?   @unique @map("unique_link_id")
+  passwordHash   String?   @map("password_hash")
+  isFeatured     Boolean   @default(false) @map("is_featured")
+  displayOrder   Int       @default(0) @map("display_order")
+  demoUrl        String?   @map("demo_url")
+  githubUrl      String?   @map("github_url")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  images ProjectImage[]
+
+  @@index([slug])
+  @@index([visibility])
+  @@index([isFeatured])
+  @@index([displayOrder])
+  @@map("projects")
+}
+
+// Images belonging to projects
+model ProjectImage {
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  imageUrl     String   @map("image_url")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([displayOrder])
+  @@map("project_images")
+}
+
+// Work experience entries
+model Experience {
+  id             String    @id @default(uuid())
+  companyName    String    @map("company_name")
+  jobTitle       String    @map("job_title")
+  employmentType String    @map("employment_type") // full-time, part-time, contract, freelance
+  startDate      DateTime  @map("start_date")
+  endDate        DateTime? @map("end_date")
+  isCurrent      Boolean   @default(false) @map("is_current")
+  location       String?
+  description    String?
+  companyLogoUrl String?   @map("company_logo_url")
+  displayOrder   Int       @default(0) @map("display_order")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([displayOrder])
+  @@index([startDate])
+  @@map("experience")
+}
+
+// Educational background
+model Education {
+  id                 String    @id @default(uuid())
+  institutionName    String    @map("institution_name")
+  degree             String
+  fieldOfStudy       String?   @map("field_of_study")
+  startDate          DateTime? @map("start_date")
+  endDate            DateTime? @map("end_date")
+  gpa                Float?
+  achievements       String?
+  institutionLogoUrl String?   @map("institution_logo_url")
+  displayOrder       Int       @default(0) @map("display_order")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  @@index([displayOrder])
+  @@map("education")
+}
+
+// Client/colleague testimonials
+model Testimonial {
+  id             String   @id @default(uuid())
+  quote          String
+  personName     String   @map("person_name")
+  personRole     String   @map("person_role")
+  company        String?
+  personPhotoUrl String?  @map("person_photo_url")
+  isFeatured     Boolean  @default(false) @map("is_featured")
+  displayOrder   Int      @default(0) @map("display_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([isFeatured])
+  @@index([displayOrder])
+  @@map("testimonials")
+}
+
+// Social media and external profile links
+model SocialLink {
+  id           String   @id @default(uuid())
+  platform     String // LinkedIn, GitHub, Twitter, Custom
+  url          String
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([displayOrder])
+  @@map("social_links")
+}
+
+// Contact form messages
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+// Site settings (single row)
+model SiteSettings {
+  id                   String   @id @default(uuid())
+  siteTitle            String   @default("My Portfolio") @map("site_title")
+  metaDescription      String?  @map("meta_description")
+  faviconUrl           String?  @map("favicon_url")
+  analyticsId          String?  @map("analytics_id")
+  themeColor           String   @default("#1976d2") @map("theme_color")
+  contactFormEnabled   Boolean  @default(true) @map("contact_form_enabled")
+  notificationEmail    String?  @map("notification_email")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
