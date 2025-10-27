@@ -74,7 +74,7 @@ model Project {
   title          String
   slug           String    @unique
   description    String
-  technologies   Json      @default("[]") // Array of technology strings
+  technologies   String    @default("[]") // JSON array of technology strings
   projectDate    DateTime? @map("project_date")
   visibility     String // public, private, unlisted, password
   uniqueLinkId   String?   @unique @map("unique_link_id")
